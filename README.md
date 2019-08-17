@@ -23,7 +23,7 @@ You will need to install [NodeJS](https://nodejs.org/es/) and [Git](https://git-
 Then exec this in the shell:
 
 ```sh
-git clone git@github.com:agm-dev/stream-live-alerts.git
+git clone https://github.com/agm-dev/stream-live-alerts.git
 cd stream-live-alerts
 npm install
 cp .env.exmaple .env # copy the .env.example to .env file
