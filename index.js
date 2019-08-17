@@ -9,7 +9,7 @@ const twitch = new Twitch({ clientId: twitchClientId });
 
 (async () => {
   const streams = await twitch.getLiveStreams(streamers)
-  console.log('twitch streams streams:', streams)
+  console.log('twitch streams:', streams)
 
   Notifier.process(streams)
 })()
