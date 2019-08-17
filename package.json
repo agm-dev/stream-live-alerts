@@ -1,0 +1,16 @@
+{
+  "name": "twitch-stream-alerts",
+  "version": "1.0.0",
+  "description": "Node script to check Twitch streams data from your favorite streamers and notify in Telegram",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Adrián Gonzalo",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv-safe": "^6.1.0",
+    "node-fetch": "^2.6.0",
+    "telegraf": "^3.32.0"
+  }
+}
