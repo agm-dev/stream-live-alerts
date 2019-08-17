@@ -8,7 +8,7 @@ const {
 } = require('../config/store')
 
 const formatStreamData = data => ({
-  user_name: data.user_name,
+  user_name: data.user_name.replace(/ /img, '').toLowerCase(),
   title: data.title,
   started_at: data.started_at,
 })

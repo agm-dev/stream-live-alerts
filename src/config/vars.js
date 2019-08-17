@@ -11,7 +11,7 @@ const data = JSON.parse(jsonContent)
 const { streamers } = data
 
 module.exports = {
-  streamers,
+  streamers: streamers.map(i => i.replace(/ /img, '').toLowerCase()),
   twitchClientId: process.env.TWITCH_CLIENT_ID,
   telegramToken: process.env.TELEGRAM_TOKEN,
   telegramUserId: process.env.TELEGRAM_USER_ID,
