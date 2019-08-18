@@ -17,7 +17,11 @@ const calculateHours = stringDate => {
   const startedAt = new Date(stringDate).getTime()
   const now = new Date().getTime()
   const diff = now - startedAt
-  return Math.floor(diff / (1000 * 60 * 60))
+  const diffInHours = diff / (1000 * 60 * 60)
+  const hours = Math.floor(diffInHours)
+  const decimal = diffInHours - Math.floor(diffInHours)
+  const minutes = Math.floor(decimal * 60)
+  return [hours, minutes]
 }
 
 class Notifier {
@@ -42,10 +46,10 @@ class Notifier {
   static notify(streams = [], starting = true) {
     streams.forEach(stream => {
       const { user_name, title, started_at } = stream
-      const hours = calculateHours(started_at)
+      const [ hours, minutes ] = calculateHours(started_at)
       const text = starting ?
         `${user_name} is on streaming now!\n\n${title}\n\nhttps://twitch.tv/${user_name}` :
-        `${user_name} streaming has finished.\n\n${user_name} has been streaming during ${hours} hours`
+        `${user_name} streaming has finished.\n\n${user_name} has been streaming during ${hours}h${minutes}min`
 
         this.send(text)
           .then(response => console.log('send notification response: ', response))
