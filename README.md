@@ -10,7 +10,7 @@ A NodeJS script that queries Twitch.tv API to get data of your favourite channel
 
 ### Twitch client ID
 
-You need to go to [Twitch developers portal](https://dev.twitch.tv/), then login and go to your dashboard. Create a new app and get your client ID.
+You need to go to [Twitch developers portal](https://dev.twitch.tv/), then login and go to your dashboard. Create a new app and get your client ID and secret.
 
 ### Telegram Bot Token
 
@@ -29,7 +29,7 @@ npm install
 cp .env.exmaple .env # copy the .env.example to .env file
 ```
 
-Edit the `.env` file to fill up the `TWITCH_CLIENT_ID`, the `TELEGRAM_TOKEN`, and the `TELEGRAM_USER_ID`.
+Edit the `.env` file to fill up the `TWITCH_CLIENT_ID`, `TWITCH_SECRET`, `TELEGRAM_TOKEN`, and the `TELEGRAM_USER_ID`.
 
 If you don't know your Telegram user ID, you can ask to [myidbot](https://telegram.me/myidbot) on Telegram.
 
