@@ -13,6 +13,7 @@ const { streamers } = data
 module.exports = {
   streamers: streamers.map(i => i.replace(/ /img, '').toLowerCase()),
   twitchClientId: process.env.TWITCH_CLIENT_ID,
+  twitchSecret: process.env.TWITCH_SECRET,
   telegramToken: process.env.TELEGRAM_TOKEN,
   telegramUserId: process.env.TELEGRAM_USER_ID,
 }
