@@ -1,7 +1,14 @@
 const fs = require('fs')
 const { join } = require('path')
 
+const hasDb = require('../utils/hasDb')
+const MongoLib = require('../lib/mongo')
+
+const mongo = new MongoLib()
+
 const storePath = join(__dirname, '..', 'storage', 'store.json')
+const streamersCollection = 'liveStreamers'
+const tokenCollection = 'token'
 
 let liveStreamers = []
 let token = {}
@@ -15,20 +22,28 @@ try {
   console.log('there is no saved data in the store')
 }
 
-const saveStreamers = streamers => {
+const saveStreamers = async (streamers) => {
   const data = JSON.stringify({ liveStreamers: streamers, token }, null, 2)
   try {
-    fs.writeFileSync(storePath, data, 'utf-8')
+    if (hasDb) {
+      await mongo.create(streamersCollection, streamers)
+    } else {
+      fs.writeFileSync(storePath, data, 'utf-8')
+    }
   } catch (err) {
     console.log('error on saving data', err)
   }
 }
 
-const saveToken = newToken => {
+const saveToken = async (newToken) => {
   token = newToken
   const data = JSON.stringify({ liveStreamers, token: newToken }, null, 2)
   try {
-    fs.writeFileSync(storePath, data, 'utf-8')
+    if (hasDb) {
+      await mongo.create(tokenCollection, [token])
+    } else {
+      fs.writeFileSync(storePath, data, 'utf-8')
+    }
   } catch (err) {
     console.log('error on saving data', err)
   }
