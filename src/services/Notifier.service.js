@@ -3,7 +3,7 @@ const {
   telegramUserId,
 } = require('../config/vars')
 const {
-  liveStreamers,
+  getLiveStreamers,
   saveStreamers,
 } = require('../config/store')
 
@@ -25,22 +25,22 @@ const calculateHours = stringDate => {
 }
 
 class Notifier {
-  static process(streams) {
+  static async process(streams) {
     const formatted = streams.map(formatStreamData)
 
     const streamingNow = formatted.filter(stream => {
-      const isOnSavedOnes = liveStreamers.some(i => i.user_name === stream.user_name)
+      const isOnSavedOnes = getLiveStreamers().some(i => i.user_name === stream.user_name)
       return !isOnSavedOnes
     })
     this.notify(streamingNow, true)
 
-    const endedStream = liveStreamers.filter(stream => {
+    const endedStream = getLiveStreamers().filter(stream => {
       const isOnCurrent = formatted.some(i => i.user_name === stream.user_name)
       return !isOnCurrent
     })
     this.notify(endedStream, false)
 
-    saveStreamers(formatted)
+    return saveStreamers(formatted)
   }
 
   static notify(streams = [], starting = true) {
