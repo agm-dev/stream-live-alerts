@@ -10,6 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "dotenv-safe": "^6.1.0",
+    "mongoose": "^5.10.7",
     "node-fetch": "^2.6.1",
     "telegraf": "^3.32.0"
   }

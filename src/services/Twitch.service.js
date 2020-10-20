@@ -45,7 +45,7 @@ class Twitch {
       .then(async streams => {
         if (streams.status === 401 && !end) {
           const newToken = await this.getToken()
-          saveToken(newToken)
+          await saveToken(newToken)
           return this.getLiveStreams(streamers, true)
         }
         return streams.data.filter(item => item.type === 'live')

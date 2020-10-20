@@ -16,4 +16,11 @@ module.exports = {
   twitchSecret: process.env.TWITCH_SECRET,
   telegramToken: process.env.TELEGRAM_TOKEN,
   telegramUserId: process.env.TELEGRAM_USER_ID,
+  mongoUri: process.env.MONGO_URI,
+  mongooseOptions: {
+    keepAlive: true, // default since mongoose 5.2.0
+    useNewUrlParser: true, // to avoid deprecation warning on mongoose 5.x
+    useCreateIndex: true, // to avoid collection.ensureIndex deprecation warning
+    useUnifiedTopology: true // new server discover and monitoring engine
+  },
 }
