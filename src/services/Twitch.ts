@@ -1,5 +1,6 @@
-import { saveToken, getToken } from "../config/store";
+import { saveToken, getToken, getWatchedStreamers } from "../config/store";
 import { TWITCH_CLIENT_ID, TWITCH_SECRET } from "../config/vars";
+import { processStreams } from "./Notifier";
 import { Token } from "./Storage";
 
 async function getTwitchToken(): Promise<Token> {
@@ -63,3 +64,16 @@ export async function getLiveStreams(streamers: string[], config?: { end: boolea
   return rawData.data.filter(item => item.type === 'live');
 }
 
+export async function checkStreamings() {
+  console.log('checking streamings...');
+
+  const watchedStreamers = getWatchedStreamers();
+  console.log('channels watched:', watchedStreamers);
+
+  const streams = await getLiveStreams(watchedStreamers);
+  console.log('twitch streams:', streams)
+
+  await processStreams(streams)
+
+  console.log('notifications sent');
+}
