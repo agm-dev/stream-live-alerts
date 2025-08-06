@@ -48,6 +48,13 @@ channel1
 channel2
 ```
 
+You can configure your Telegram's bot to add this commands. This script will listen to them:
+```
+/watch_channel [channel] -> adds the channel to the csv file
+/stop_watching [channel] -> removed the channel to the csv file
+/show_watched -> prints the list of channels being tracked
+```
+
 After all this configuration just run:
 
 ```
