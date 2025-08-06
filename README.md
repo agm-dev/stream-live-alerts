@@ -31,21 +31,28 @@ cp .env.exmaple .env # copy the .env.example to .env file
 
 Edit the `.env` file to fill up the `TWITCH_CLIENT_ID`, `TWITCH_SECRET`, `TELEGRAM_TOKEN`, and the `TELEGRAM_USER_ID`.
 
-You can add `MONGO_URI`, to use a MongoDB instance as storage. For example: `MONGO_URI=mongodb://localhost:27017/stream-alerts`. This is __optional__.
-
 If you don't know your Telegram user ID, you can ask to [myidbot](https://telegram.me/myidbot) on Telegram.
 
-To personalize the script open the `stream-live-alerts/src/config/streamers.json` file and add there the ones you want to track:
-
-```json
-{
-  "streamers": [
-    "riotgames",
-    "whatever-you-want"
-  ]
-}
+You also need to create the next directories and files:
+```
+/data
+/data/store.json (with content -> {})
+/data/streamer-watched.csv
 ```
 
-After all this configuration just run `node index.js`
+Fill up `streamer-watched.csv` with some channels you want to track. You can do this from your Telegram bot, but write the csv header at least:
 
-The ideal way to run this script is by adding it to cron or schefuled task, so it is executed every 1-2 min.
+```
+streamer_watched
+channel1
+channel2
+```
+
+After all this configuration just run:
+
+```
+npm install
+npm run build
+npm start
+```
+

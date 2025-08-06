@@ -2,8 +2,6 @@ import { join } from 'node:path';
 
 const DATA_DIR = join(__dirname, '..', '..', 'data');
 
-export const STREAMER_CHANNELS_FILE = join(DATA_DIR, 'streamer-channels.csv');
-
 export const STREAMER_WATCHED_CSV_HEADER = 'streamer_watched';
 export const STREAMER_WATCHED_FILE = join(DATA_DIR, 'streamer-watched.csv');
 
