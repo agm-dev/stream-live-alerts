@@ -30,18 +30,15 @@ bot.command('watch_channel', async (ctx) => {
   const channel = firstArg.trim();
 
   try {
-    const streams = await getLiveStreams([channel])
-
-    const exists = streams.length && [streams[0].user_name.toLowerCase(), streams[0].user_login.toLowerCase()].includes(channel.toLowerCase());
-
-    if (!exists) {
+    await getLiveStreams([channel]);
+    addWatchedStreamer(channel);
+    ctx.reply(`Channel ${channel} is now being watched.`);
+  } catch (error: unknown) {
+    if ((error as Error & { code: number })?.code === 400) {
       ctx.reply(`The channel ${channel} doesn't exist.`);
       return;
     }
 
-    addWatchedStreamer(channel);
-    ctx.reply(`Channel ${channel} is now being watched.`);
-  } catch (error: unknown) {
     ctx.reply(`Error while trying to watch channel ${channel}.`);
     console.error('Error while trying to watch channel:', error);
   }

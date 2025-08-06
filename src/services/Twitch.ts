@@ -61,6 +61,12 @@ export async function getLiveStreams(streamers: string[], config?: { end: boolea
     return getLiveStreams(streamers, { end: true });
   }
 
+  if (rawData.status === 400) {
+    const error = new Error("some of the channels doesn't exist");
+    (error as Error & { code: number }).code = 400;
+    throw error;
+  }
+
   return rawData.data.filter(item => item.type === 'live');
 }
 
