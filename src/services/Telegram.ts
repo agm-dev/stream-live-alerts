@@ -1,16 +1,18 @@
 
 import { Telegram, Telegraf } from 'telegraf';
-import { TELEGRAM_TOKEN, TELEGRAM_USER_ID } from '../config/vars';
+import { TELEGRAM_TOKEN, TELEGRAM_USER_ID, SECONDARY_USERS_IDS } from '../config/vars';
 import { addWatchedStreamer, getWatchedStreamers, removeWatchedStreamer } from '../config/store';
 import { getLiveStreams } from './Twitch';
+
+const validUsers = [TELEGRAM_USER_ID, ...SECONDARY_USERS_IDS];
 
 const telegramApi = new Telegram(TELEGRAM_TOKEN ?? '', {
   agent: undefined,
   webhookReply: false,
 });
 
-export function sendTelegramMessage(text: string) {
-  return telegramApi.sendMessage(TELEGRAM_USER_ID, text, {
+export function sendTelegramMessage(text: string, user_id: string) {
+  return telegramApi.sendMessage(user_id, text, {
     link_preview_options: {
       is_disabled: true,
     }
@@ -20,6 +22,13 @@ export function sendTelegramMessage(text: string) {
 const bot = new Telegraf(TELEGRAM_TOKEN ?? '');
 
 bot.command('watch_channel', async (ctx) => {
+  const user_id = ctx.message.from.id.toString();
+
+  if (!validUsers.includes(user_id)) {
+    ctx.reply('You are not an authorized user :(');
+    return;
+  }
+
   const firstArg = ctx.message.text.split(' ')?.[1];
 
   if (!firstArg) {
@@ -30,8 +39,8 @@ bot.command('watch_channel', async (ctx) => {
   const channel = firstArg.trim();
 
   try {
-    await getLiveStreams([channel]);
-    addWatchedStreamer(channel);
+    await getLiveStreams([{ channel, subscribers: [] }]); // just to check if the channel exists
+    addWatchedStreamer(channel, user_id);
     ctx.reply(`Channel ${channel} is now being watched.`);
   } catch (error: unknown) {
     if ((error as Error & { code: number })?.code === 400) {
@@ -45,6 +54,13 @@ bot.command('watch_channel', async (ctx) => {
 });
 
 bot.command('stop_watching', (ctx) => {
+  const user_id = ctx.message.from.id.toString();
+
+  if (!validUsers.includes(user_id)) {
+    ctx.reply('You are not an authorized user :(');
+    return;
+  }
+
   const firstArg = ctx.message.text.split(' ')?.[1];
 
   if (!firstArg) {
@@ -54,13 +70,20 @@ bot.command('stop_watching', (ctx) => {
 
   const channel = firstArg.trim();
 
-  removeWatchedStreamer(channel);
+  removeWatchedStreamer(channel, user_id);
 
   ctx.reply(`Removed ${channel} from watching list`);
 });
 
 bot.command('show_watched', (ctx) => {
-  const streamers = getWatchedStreamers();
+  const user_id = ctx.message.from.id.toString();
+
+  if (!validUsers.includes(user_id)) {
+    ctx.reply('You are not an authorized user :(');
+    return;
+  }
+
+  const streamers = getWatchedStreamers(user_id);
 
   ctx.reply([
     'Currently watching:',

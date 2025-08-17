@@ -1,5 +1,5 @@
-import { readFileSync, write, writeFileSync } from 'node:fs';
-import { STORE_FILE, STREAMER_WATCHED_CSV_HEADER, STREAMER_WATCHED_FILE } from "./vars";
+import { readFileSync, writeFileSync } from 'node:fs';
+import { STORE_FILE, STREAMER_WATCHED_CSV_HEADER_0, STREAMER_WATCHED_CSV_HEADER_1, STREAMER_WATCHED_FILE } from "./vars";
 import { LiveStreamer, Token } from '../services/Storage';
 
 let liveStreamers: LiveStreamer[] = [];
@@ -40,50 +40,105 @@ export function saveToken(newToken: Token) {
   }
 }
 
-function getOneColumnCsvLines(filePath: string): string[] {
-  const csvContent = readFileSync(filePath, 'utf-8');
-  const lines = csvContent.split('\n')
-    .slice(1) // Skip the header line
-    .map(line => line.trim())
-    .filter(line => !!line.length);
-
-  return lines.map(line => (line.split(',')[0] || '').trim());
+export interface WatchedStreamer {
+  channel: string;
+  subscribers: string[];
 }
 
-export function getWatchedStreamers(): string[] {
-  const lines = getOneColumnCsvLines(STREAMER_WATCHED_FILE);
-  return lines.filter(line => line !== '' && !line.startsWith('#'));
+export function getWatchedStreamersFromFile(filePath: string): WatchedStreamer[] {
+  const csvContent = readFileSync(filePath, 'utf-8');
+
+  const lines = csvContent.split('\n');
+
+  const values = lines.slice(1).map(line => line.split(','));
+
+  return values.map(values => ({
+    channel: values[0].trim(),
+    subscribers: values[1].trim().split(';'),
+  }));
 }
 
 export const getToken = () => token?.access_token ?? '';
 
 export const getLiveStreamers = () => liveStreamers
 
-export function addWatchedStreamer(channel: string) {
-  const formerLines = getOneColumnCsvLines(STREAMER_WATCHED_FILE);
+export function getWatchedStreamers(subscriber: string): string[] {
+  const data = getWatchedStreamersFromFile(STREAMER_WATCHED_FILE);
+  return data
+    .filter(item => item.subscribers.includes(subscriber))
+    .map(item => item.channel);
+}
 
-  const alreadyExists = formerLines.some(line => line.toLowerCase() === channel.toLowerCase());
+export function addWatchedStreamer(channel: string, subscriber: string) {
+  const watchedStreamers = getWatchedStreamersFromFile(STREAMER_WATCHED_FILE);
 
-  if (alreadyExists) {
-    return;
+  let streamData = watchedStreamers.find(i => i.channel.toLowerCase() === channel.toLowerCase());
+
+  if (streamData?.subscribers.includes(subscriber)) {
+    return; // already exists
+  } else if (streamData) {
+    streamData.subscribers.push(subscriber);
+  } else {
+    streamData = {
+      channel,
+      subscribers: [subscriber],
+    }
   }
 
-  const newLines = [...formerLines, channel];
+  const newValue = watchedStreamers.map(data => {
+    if (data.channel === channel) {
+      return streamData;
+    }
+    return data;
+  })
 
-  const csvContent = [STREAMER_WATCHED_CSV_HEADER, ...newLines].join('\n');
+  const csvContent = [
+    [STREAMER_WATCHED_CSV_HEADER_0, STREAMER_WATCHED_CSV_HEADER_1].join(','),
+    ...newValue.map(data => [
+      data.channel,
+      data.subscribers.join(';')
+    ].join(','))
+  ].join('\n');
 
   writeFileSync(STREAMER_WATCHED_FILE, csvContent, 'utf-8');
 }
 
-export function removeWatchedStreamer(channel: string) {
-  const formerLines = getOneColumnCsvLines(STREAMER_WATCHED_FILE);
+export function removeWatchedStreamer(channel: string, subscriber: string) {
+  const watchedStreamers = getWatchedStreamersFromFile(STREAMER_WATCHED_FILE);
 
-  const newLines = formerLines.filter(line => line.toLowerCase() !== channel.trim().toLowerCase());
+  const newContent = watchedStreamers
+    .filter(item => item.channel.toLowerCase() !== channel.toLowerCase() || (item.subscribers.length === 1 && item.subscribers[0] === subscriber))
+    .map(item => {
+      if (item.channel.toLowerCase() !== channel.toLowerCase()) {
+        return item;
+      }
+      return {
+        channel: item.channel,
+        subscribers: item.subscribers.filter(value => value !== subscriber),
+      }
+    });
 
-  const csvContent = [STREAMER_WATCHED_CSV_HEADER, ...newLines].join('\n');
+  const csvContent = [
+    [STREAMER_WATCHED_CSV_HEADER_0, STREAMER_WATCHED_CSV_HEADER_1].join(','),
+    ...newContent.map(data => [
+      data.channel,
+      data.subscribers.join(';')
+    ].join(','))
+  ].join('\n');
 
   writeFileSync(STREAMER_WATCHED_FILE, csvContent, 'utf-8');
 
-  const updatedStreamers = liveStreamers.filter(data => data.user_name !== channel);
+  const updatedStreamers = liveStreamers
+    .map(item => {
+      if (item.user_name !== channel) {
+        return item;
+      }
+
+      return {
+        ...item,
+        subscribers: item.subscribers.filter(value => value !== subscriber),
+      }
+    })
+    
   saveStreamers(updatedStreamers);
 }

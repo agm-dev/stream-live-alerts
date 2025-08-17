@@ -2,6 +2,7 @@ export interface LiveStreamer {
   user_name: string;
   title: string;
   started_at: string;
+  subscribers: string[];
 }
 
 export interface Token {
