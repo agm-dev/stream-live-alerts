@@ -27,7 +27,7 @@ function parseStringArrayEnvVar(value?: string): string[] {
       return [];
     }
 
-    return raw
+    return raw.map(i => `${i}`);
   } catch (error: unknown) {
     console.error(error);
     return [];

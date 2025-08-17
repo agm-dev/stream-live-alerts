@@ -6,8 +6,6 @@ import { getLiveStreams } from './Twitch';
 
 const validUsers = [TELEGRAM_USER_ID, ...SECONDARY_USERS_IDS];
 
-const isSecondaryUser = (user_id: string) => SECONDARY_USERS_IDS.includes(user_id);
-
 const telegramApi = new Telegram(TELEGRAM_TOKEN ?? '', {
   agent: undefined,
   webhookReply: false,
