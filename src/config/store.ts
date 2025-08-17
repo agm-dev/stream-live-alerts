@@ -1,5 +1,5 @@
-import { readFileSync, write, writeFileSync } from 'node:fs';
-import { STORE_FILE, STREAMER_WATCHED_CSV_HEADER, STREAMER_WATCHED_FILE } from "./vars";
+import { readFileSync, writeFileSync } from 'node:fs';
+import { MAX_CHANNELS_ALLOWED, SECONDARY_USERS_IDS, STORE_FILE, STREAMER_WATCHED_CSV_HEADER_0, STREAMER_WATCHED_CSV_HEADER_1, STREAMER_WATCHED_FILE } from "./vars";
 import { LiveStreamer, Token } from '../services/Storage';
 
 let liveStreamers: LiveStreamer[] = [];
@@ -40,50 +40,120 @@ export function saveToken(newToken: Token) {
   }
 }
 
-function getOneColumnCsvLines(filePath: string): string[] {
-  const csvContent = readFileSync(filePath, 'utf-8');
-  const lines = csvContent.split('\n')
-    .slice(1) // Skip the header line
-    .map(line => line.trim())
-    .filter(line => !!line.length);
-
-  return lines.map(line => (line.split(',')[0] || '').trim());
+export interface WatchedStreamer {
+  channel: string;
+  subscribers: string[];
 }
 
-export function getWatchedStreamers(): string[] {
-  const lines = getOneColumnCsvLines(STREAMER_WATCHED_FILE);
-  return lines.filter(line => line !== '' && !line.startsWith('#'));
+export function getWatchedStreamersFromFile(filePath: string): WatchedStreamer[] {
+  const csvContent = readFileSync(filePath, 'utf-8');
+
+  const lines = csvContent.split('\n');
+
+  const valueLines = lines.slice(1).map(line => line.split(','));
+
+  const parsed = valueLines.map(line => ({
+    channel: line[0].trim(),
+    subscribers: line[1].trim().split(';').filter(i => i.length),
+  }));
+
+  return parsed;
 }
 
 export const getToken = () => token?.access_token ?? '';
 
 export const getLiveStreamers = () => liveStreamers
 
-export function addWatchedStreamer(channel: string) {
-  const formerLines = getOneColumnCsvLines(STREAMER_WATCHED_FILE);
+export function getWatchedStreamers(subscriber: string): string[] {
+  const data = getWatchedStreamersFromFile(STREAMER_WATCHED_FILE);
+  return data
+    .filter(item => item.subscribers.includes(subscriber))
+    .map(item => item.channel);
+}
 
-  const alreadyExists = formerLines.some(line => line.toLowerCase() === channel.toLowerCase());
+export function addWatchedStreamer(channel: string, subscriber: string) {
+  const watchedStreamers = getWatchedStreamersFromFile(STREAMER_WATCHED_FILE);
 
-  if (alreadyExists) {
-    return;
-  }
+  const channelIsInTheList = watchedStreamers.some(item => item.channel === channel);
 
-  const newLines = [...formerLines, channel];
+  const newValue: WatchedStreamer[] = channelIsInTheList ?
+    watchedStreamers.map(item => {
+      if (item.channel !== channel) {
+        return item;
+      }
 
-  const csvContent = [STREAMER_WATCHED_CSV_HEADER, ...newLines].join('\n');
+      return {
+        channel: item.channel,
+        subscribers: item.subscribers.includes(subscriber) ? item.subscribers : [...item.subscribers, subscriber],
+      }
+    }) :
+    [...watchedStreamers, {
+      channel,
+      subscribers: [subscriber],
+    }]
+
+  const csvContent = [
+    [
+      STREAMER_WATCHED_CSV_HEADER_0, STREAMER_WATCHED_CSV_HEADER_1].join(','),
+      ...newValue.map(data => [
+        data.channel,
+        data.subscribers.join(';')
+      ].join(','))
+    ].join('\n');
 
   writeFileSync(STREAMER_WATCHED_FILE, csvContent, 'utf-8');
 }
 
-export function removeWatchedStreamer(channel: string) {
-  const formerLines = getOneColumnCsvLines(STREAMER_WATCHED_FILE);
+export function removeWatchedStreamer(channel: string, subscriber: string) {
+  const watchedStreamers = getWatchedStreamersFromFile(STREAMER_WATCHED_FILE);
 
-  const newLines = formerLines.filter(line => line.toLowerCase() !== channel.trim().toLowerCase());
+  const channelIsInTheList = watchedStreamers.some(item => item.channel === channel);
 
-  const csvContent = [STREAMER_WATCHED_CSV_HEADER, ...newLines].join('\n');
+  const newContent: WatchedStreamer[] = channelIsInTheList ? 
+    watchedStreamers
+      .map(item => ({
+        channel: item.channel,
+        subscribers: item.channel === channel ? item.subscribers.filter(value => value !== subscriber) : [...item.subscribers]
+      }))
+      .filter(item => !!item.subscribers.length) :
+    [...watchedStreamers];
+
+  const csvContent = [
+    [
+      STREAMER_WATCHED_CSV_HEADER_0, STREAMER_WATCHED_CSV_HEADER_1].join(','),
+      ...newContent.map(data => [
+        data.channel,
+        data.subscribers.join(';')
+      ].join(','))
+    ].join('\n');
 
   writeFileSync(STREAMER_WATCHED_FILE, csvContent, 'utf-8');
 
-  const updatedStreamers = liveStreamers.filter(data => data.user_name !== channel);
+  const updatedStreamers = liveStreamers
+    .map(item => {
+      if (item.user_name !== channel) {
+        return item;
+      }
+
+      return {
+        ...item,
+        subscribers: item.subscribers.filter(value => value !== subscriber),
+      }
+    })
+    
   saveStreamers(updatedStreamers);
+}
+
+export function userCanSubscribeToMoreChannels(user_id: string): boolean {
+  const watchedStreamers = getWatchedStreamersFromFile(STREAMER_WATCHED_FILE);  
+  const subscribedChannels = watchedStreamers.filter(item => item.subscribers.includes(user_id))
+  const isSecondaryUser = SECONDARY_USERS_IDS.includes(user_id);
+
+  if (!isSecondaryUser) {
+    return true;
+  }
+
+  const hasRoomForMoreSubscriptions = subscribedChannels.length < MAX_CHANNELS_ALLOWED;
+
+  return hasRoomForMoreSubscriptions;
 }

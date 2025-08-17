@@ -29,7 +29,7 @@ npm install
 cp .env.exmaple .env # copy the .env.example to .env file
 ```
 
-Edit the `.env` file to fill up the `TWITCH_CLIENT_ID`, `TWITCH_SECRET`, `TELEGRAM_TOKEN`, and the `TELEGRAM_USER_ID`.
+Edit the `.env` file to fill up the `TWITCH_CLIENT_ID`, `TWITCH_SECRET`, `TELEGRAM_TOKEN`, and the `TELEGRAM_USER_ID`. You can also add `SECONDARY_USERS_IDS` if you want to allow other Telegram users to use your bot. This variable is an array of other authorized users ids. They will have a limit of watched channels set by `MAX_CHANNELS_ALLOWED`.
 
 If you don't know your Telegram user ID, you can ask to [myidbot](https://telegram.me/myidbot) on Telegram.
 
@@ -43,9 +43,9 @@ You also need to create the next directories and files:
 Fill up `streamer-watched.csv` with some channels you want to track. You can do this from your Telegram bot, but write the csv header at least:
 
 ```
-streamer_watched
-channel1
-channel2
+streamer_watched,user_ids
+channel1,123
+channel2,123;456
 ```
 
 You can configure your Telegram's bot to add this commands. This script will listen to them:

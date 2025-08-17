@@ -1,5 +1,5 @@
-import { saveToken, getToken, getWatchedStreamers } from "../config/store";
-import { TWITCH_CLIENT_ID, TWITCH_SECRET } from "../config/vars";
+import { saveToken, getToken, getWatchedStreamersFromFile, WatchedStreamer } from "../config/store";
+import { STREAMER_WATCHED_FILE, TWITCH_CLIENT_ID, TWITCH_SECRET } from "../config/vars";
 import { processStreams } from "./Notifier";
 import { Token } from "./Storage";
 
@@ -29,11 +29,12 @@ interface LiveStreamResponse {
     tag_ids: string[];
     tags: string[];
     is_mature: boolean;
+    subscribers: string[]; // this doesn't come from Twitch
   }[];
   status: number;
 }
 
-export async function getLiveStreams(streamers: string[], config?: { end: boolean }): Promise<LiveStreamResponse['data']> {
+export async function getLiveStreams(streamers: WatchedStreamer[], config?: { end: boolean }): Promise<LiveStreamResponse['data']> {
   if (!streamers.length) {
     console.log('required streamers data to get streams');
     throw new Error('No streamers provided');
@@ -42,7 +43,7 @@ export async function getLiveStreams(streamers: string[], config?: { end: boolea
   const end = config?.end ?? false;
 
   const queryString = streamers
-    .map(item => `user_login=${encodeURI(item)}`)
+    .map(item => `user_login=${encodeURI(item.channel)}`)
     .join('&')
 
   const url = `https://api.twitch.tv/helix/streams?${queryString}`
@@ -67,14 +68,20 @@ export async function getLiveStreams(streamers: string[], config?: { end: boolea
     throw error;
   }
 
-  return rawData.data.filter(item => item.type === 'live');
+  return rawData.data
+    .filter(item => item.type === 'live')
+    .map(item => {
+      const subscribers = streamers.find(streamer => streamer.channel === item.user_login)?.subscribers ?? [];
+      return { ...item, subscribers }
+    })
 }
 
 export async function checkStreamings() {
   console.log('checking streamings...');
 
-  const watchedStreamers = getWatchedStreamers();
-  console.log('channels watched:', watchedStreamers);
+  const watchedStreamers = getWatchedStreamersFromFile(STREAMER_WATCHED_FILE);
+  
+  console.log('channels watched:', watchedStreamers.map(item => item.channel));
 
   const streams = await getLiveStreams(watchedStreamers);
   console.log('twitch streams:', streams)
