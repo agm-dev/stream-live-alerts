@@ -1,10 +1,12 @@
 
 import { Telegram, Telegraf } from 'telegraf';
-import { TELEGRAM_TOKEN, TELEGRAM_USER_ID, SECONDARY_USERS_IDS } from '../config/vars';
-import { addWatchedStreamer, getWatchedStreamers, removeWatchedStreamer } from '../config/store';
+import { TELEGRAM_TOKEN, TELEGRAM_USER_ID, SECONDARY_USERS_IDS, MAX_CHANNELS_ALLOWED } from '../config/vars';
+import { addWatchedStreamer, getWatchedStreamers, removeWatchedStreamer, userCanSubscribeToMoreChannels } from '../config/store';
 import { getLiveStreams } from './Twitch';
 
 const validUsers = [TELEGRAM_USER_ID, ...SECONDARY_USERS_IDS];
+
+const isSecondaryUser = (user_id: string) => SECONDARY_USERS_IDS.includes(user_id);
 
 const telegramApi = new Telegram(TELEGRAM_TOKEN ?? '', {
   agent: undefined,
@@ -37,6 +39,11 @@ bot.command('watch_channel', async (ctx) => {
   }
 
   const channel = firstArg.trim();
+
+  if (!userCanSubscribeToMoreChannels(user_id)) {
+    ctx.reply(`You have reached the max number of subscriptions ${MAX_CHANNELS_ALLOWED}`);
+    return;
+  }
 
   try {
     await getLiveStreams([{ channel, subscribers: [] }]); // just to check if the channel exists

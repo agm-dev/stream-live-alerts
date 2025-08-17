@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from 'node:fs';
-import { STORE_FILE, STREAMER_WATCHED_CSV_HEADER_0, STREAMER_WATCHED_CSV_HEADER_1, STREAMER_WATCHED_FILE } from "./vars";
+import { MAX_CHANNELS_ALLOWED, SECONDARY_USERS_IDS, STORE_FILE, STREAMER_WATCHED_CSV_HEADER_0, STREAMER_WATCHED_CSV_HEADER_1, STREAMER_WATCHED_FILE } from "./vars";
 import { LiveStreamer, Token } from '../services/Storage';
 
 let liveStreamers: LiveStreamer[] = [];
@@ -141,4 +141,18 @@ export function removeWatchedStreamer(channel: string, subscriber: string) {
     })
     
   saveStreamers(updatedStreamers);
+}
+
+export function userCanSubscribeToMoreChannels(user_id: string): boolean {
+  const watchedStreamers = getWatchedStreamersFromFile(STREAMER_WATCHED_FILE);  
+  const subscribedChannels = watchedStreamers.filter(item => item.subscribers.includes(user_id))
+  const isSecondaryUser = SECONDARY_USERS_IDS.includes(user_id);
+
+  if (!isSecondaryUser) {
+    return true;
+  }
+
+  const hasRoomForMoreSubscriptions = subscribedChannels.length < MAX_CHANNELS_ALLOWED;
+
+  return hasRoomForMoreSubscriptions;
 }
