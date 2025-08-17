@@ -52,10 +52,12 @@ export function getWatchedStreamersFromFile(filePath: string): WatchedStreamer[]
 
   const valueLines = lines.slice(1).map(line => line.split(','));
 
-  const parsed = valueLines.map(line => ({
-    channel: line[0].trim(),
-    subscribers: line[1].trim().split(';').filter(i => i.length),
-  }));
+  const parsed = valueLines
+    .map(line => ({
+      channel: line?.[0]?.trim() ?? '',
+      subscribers: line?.[1]?.trim().split(';').filter(i => i.length) ?? [],
+    }))
+    .filter(i => i.channel.length && i.subscribers.length)
 
   return parsed;
 }
