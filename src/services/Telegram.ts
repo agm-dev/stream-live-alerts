@@ -29,7 +29,7 @@ bot.command('watch_channel', async (ctx) => {
     return;
   }
 
-  const firstArg = ctx.message.text.split(' ')?.[1];
+  const firstArg = ctx.message.text.split(' ')?.[1]?.toLowerCase();
 
   if (!firstArg) {
     ctx.reply('That command requieres a param');
@@ -66,7 +66,7 @@ bot.command('stop_watching', (ctx) => {
     return;
   }
 
-  const firstArg = ctx.message.text.split(' ')?.[1];
+  const firstArg = ctx.message.text.split(' ')?.[1]?.toLowerCase();
 
   if (!firstArg) {
     ctx.reply('That command requieres a param');
