@@ -11,11 +11,14 @@ const telegramApi = new Telegram(TELEGRAM_TOKEN ?? '', {
   webhookReply: false,
 });
 
-export function sendTelegramMessage(text: string, user_id: string) {
+export function sendTelegramMessage(text: string, user_id: string, options?: { disable_notification: boolean }) {
+  const disable_notification = options?.disable_notification === true;
+
   return telegramApi.sendMessage(user_id, text, {
     link_preview_options: {
       is_disabled: true,
-    }
+    },
+    disable_notification,
   });
 }
 

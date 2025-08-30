@@ -56,7 +56,8 @@ export function notify(streams: LiveStreamer[], starting: boolean) {
       `${user_name} streaming has finished.\n\n${user_name} has been streaming during ${hours}h${minutes}min`
 
       subscribers.forEach(user_id => {
-        sendTelegramMessage(text, user_id)
+        const options = { disable_notification: !starting };
+        sendTelegramMessage(text, user_id, options)
           .then(response => console.log('send notification response: ', response))
           .catch(err => console.log('error on sending notification: ', err))
       });
