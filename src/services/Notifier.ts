@@ -1,4 +1,4 @@
-import { getLiveStreamers, saveStreamers } from "../config/store"
+import { getLiveStreamers, getUserSettingsFromFile, saveStreamers } from "../config/store"
 import { LiveStreamer } from "./Storage"
 import { sendTelegramMessage } from "./Telegram"
 
@@ -48,6 +48,8 @@ export function processStreams(streams: LiveStreamer[]): LiveStreamer[] {
 }
 
 export function notify(streams: LiveStreamer[], starting: boolean) {
+  const usersSettings = getUserSettingsFromFile();
+
   streams.forEach(stream => {
     const { user_name, title, started_at, subscribers } = stream
     const [ hours, minutes ] = calculateHours(started_at)
@@ -56,6 +58,15 @@ export function notify(streams: LiveStreamer[], starting: boolean) {
       `${user_name} streaming has finished.\n\n${user_name} has been streaming during ${hours}h${minutes}min`
 
       subscribers.forEach(user_id => {
+        const userSettings = usersSettings.find(item => item.userId === user_id);
+        if (!userSettings?.notifications) {
+          return;
+        }
+
+        if (!starting && !userSettings?.notifyOnEnd) {
+          return;
+        }
+
         const options = { disable_notification: !starting };
         sendTelegramMessage(text, user_id, options)
           .then(response => console.log('send notification response: ', response))

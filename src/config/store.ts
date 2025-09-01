@@ -1,5 +1,5 @@
-import { readFileSync, writeFileSync } from 'node:fs';
-import { MAX_CHANNELS_ALLOWED, SECONDARY_USERS_IDS, STORE_FILE, STREAMER_WATCHED_CSV_HEADER_0, STREAMER_WATCHED_CSV_HEADER_1, STREAMER_WATCHED_FILE } from "./vars";
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { MAX_CHANNELS_ALLOWED, SECONDARY_USERS_IDS, STORE_FILE, STREAMER_WATCHED_CSV_HEADER_0, STREAMER_WATCHED_CSV_HEADER_1, STREAMER_WATCHED_FILE, USER_SETTINGS, USER_SETTINGS_CSV_HEADERS } from "./vars";
 import { LiveStreamer, Token } from '../services/Storage';
 
 let liveStreamers: LiveStreamer[] = [];
@@ -60,6 +60,64 @@ export function getWatchedStreamersFromFile(filePath: string): WatchedStreamer[]
     .filter(i => i.channel.length && i.subscribers.length)
 
   return parsed;
+}
+
+export interface UserSettings {
+  userId: string;
+  notifications: boolean;
+  notifyOnEnd: boolean;
+}
+
+export function getUserSettingsFromFile(): UserSettings[] {
+  if (!existsSync(USER_SETTINGS)) {
+    const data = getWatchedStreamersFromFile(STREAMER_WATCHED_FILE);
+    const uniqueUserIds: string[] = [];
+    data.forEach(item => {
+      item.subscribers.forEach(subscriber => {
+        if (!uniqueUserIds.includes(subscriber)) {
+          uniqueUserIds.push(subscriber);
+        }
+      })
+    });
+    writeFileSync(USER_SETTINGS, [
+      `${USER_SETTINGS_CSV_HEADERS.join(',')}`,
+      ...uniqueUserIds.map(user_id => [user_id, 'true', 'false']),
+    ].join('\n'), 'utf-8');
+  }
+
+  const csvContent = readFileSync(USER_SETTINGS, 'utf-8');
+
+  const lines = csvContent.split('\n');
+
+  const valueLines = lines.slice(1).map(line => line.split(','));
+
+  const parsed = valueLines
+    .map(line => ({
+      userId: line?.[0]?.trim() ?? '',
+      notifications: line?.[1]?.trim() === 'true',
+      notifyOnEnd: line?.[2]?.trim() === 'true',
+    }))
+
+  return parsed;
+}
+
+export function updateUserSettings(newSettings: UserSettings) {
+  const settings = getUserSettingsFromFile();
+  const updatedSettings: UserSettings[] = settings.map(item => {
+    if (item.userId !== newSettings.userId) {
+      return item;
+    }
+    return newSettings;
+  })
+  const csvContent = [
+    `${USER_SETTINGS_CSV_HEADERS.join(',')}`,
+    ...updatedSettings.map(item => [
+      item.userId,
+      item.notifications ? 'true' : 'false',
+      item.notifyOnEnd ? 'true' : 'false',
+    ].join(',')),
+  ].join('\n');
+  writeFileSync(USER_SETTINGS, csvContent, 'utf-8');
 }
 
 export const getToken = () => token?.access_token ?? '';

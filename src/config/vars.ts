@@ -7,6 +7,13 @@ export const STREAMER_WATCHED_CSV_HEADER_0 = 'streamer_watched';
 export const STREAMER_WATCHED_CSV_HEADER_1 = 'user_ids';
 export const STREAMER_WATCHED_FILE = join(DATA_DIR, 'streamer-watched.csv');
 
+export const USER_SETTINGS_CSV_HEADERS = [
+  'user_id',
+  'notifications',
+  'notify_on_end',
+]
+export const USER_SETTINGS = join(DATA_DIR, 'user-settings.csv');
+
 export const STORE_FILE = join(DATA_DIR, 'store.json');
 
 export const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID;

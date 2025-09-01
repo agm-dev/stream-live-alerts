@@ -1,7 +1,7 @@
 
 import { Telegram, Telegraf } from 'telegraf';
 import { TELEGRAM_TOKEN, TELEGRAM_USER_ID, SECONDARY_USERS_IDS, MAX_CHANNELS_ALLOWED } from '../config/vars';
-import { addWatchedStreamer, getWatchedStreamers, removeWatchedStreamer, userCanSubscribeToMoreChannels } from '../config/store';
+import { addWatchedStreamer, getUserSettingsFromFile, getWatchedStreamers, removeWatchedStreamer, updateUserSettings, userCanSubscribeToMoreChannels } from '../config/store';
 import { getLiveStreams } from './Twitch';
 
 const validUsers = [TELEGRAM_USER_ID, ...SECONDARY_USERS_IDS];
@@ -97,6 +97,88 @@ bot.command('show_watched', (ctx) => {
     'Currently watching:',
     ...streamers,
   ].join('\n'));
+});
+
+bot.command('enable_notifications', (ctx) => {
+  const user_id = ctx.message.from.id.toString();
+
+  if (!validUsers.includes(user_id)) {
+    ctx.reply('You are not an authorized user :(');
+    return;
+  }
+
+  const settings = getUserSettingsFromFile();
+  const userSettings = settings.find(i => i.userId === user_id);
+
+  const newUserSettings = {
+    userId: user_id,
+    notifications: true,
+    notifyOnEnd: userSettings?.notifyOnEnd ?? false,
+  }
+
+  updateUserSettings(newUserSettings);
+
+  ctx.reply('Notifications have been enabled');
+});
+
+bot.command('disable_notifications', (ctx) => {
+  const user_id = ctx.message.from.id.toString();
+
+  if (!validUsers.includes(user_id)) {
+    ctx.reply('You are not an authorized user :(');
+    return;
+  }
+
+  const settings = getUserSettingsFromFile();
+  const userSettings = settings.find(i => i.userId === user_id);
+
+  const newUserSettings = {
+    userId: user_id,
+    notifications: false,
+    notifyOnEnd: userSettings?.notifyOnEnd ?? false,
+  }
+
+  updateUserSettings(newUserSettings);
+
+  ctx.reply('Notifications have been disabled');
+});
+
+bot.command('enable_notifications_on_end', (ctx) => {
+  const user_id = ctx.message.from.id.toString();
+
+  if (!validUsers.includes(user_id)) {
+    ctx.reply('You are not an authorized user :(');
+    return;
+  }
+
+  const newUserSettings = {
+    userId: user_id,
+    notifications: true,
+    notifyOnEnd: true,
+  }
+
+  updateUserSettings(newUserSettings);
+
+  ctx.reply('You will be notified when a streamer you follow ends their streaming');
+});
+
+bot.command('disable_notifications_on_end', (ctx) => {
+  const user_id = ctx.message.from.id.toString();
+
+  if (!validUsers.includes(user_id)) {
+    ctx.reply('You are not an authorized user :(');
+    return;
+  }
+
+  const newUserSettings = {
+    userId: user_id,
+    notifications: true,
+    notifyOnEnd: false,
+  }
+
+  updateUserSettings(newUserSettings);
+
+  ctx.reply('You only will be notified when a streamer you follow starts streaming');
 });
 
 // Enable graceful stop

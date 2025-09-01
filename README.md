@@ -63,3 +63,15 @@ npm run build
 npm start
 ```
 
+## Telegram's Bot Commands
+
+```
+watch_channel - Adds a channel to watched list
+stop_watching - Removes a channel from watched list
+show_watched - Displays the list of watching channels
+enable_notifications - Enables all notifications
+disable_notifications - Disables all notifications
+enable_notifications_on_end - Enables notifications when a streaming ends
+disable_notifications_on_end - Disables notifications when a streaming ends
+```
+
